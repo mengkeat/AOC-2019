@@ -1,3 +1,5 @@
+# Assume no overlapping lines colinearly
+# On hindsight solution O(line segment^2) is an overkill. A brute force approach will work on given dataset. 
 import os
 
 with open("Day03.txt") as infile:
@@ -64,7 +66,6 @@ def nearest(line1, line2):
 
     return min_l1_dist, min_line_dist
 
-# Assume no overlapping lines
 print(nearest( ["R8", "U5", "L5", "D3"], ["U7", "R6", "D4", "L4"]))
 
 assert nearest( ["R75","D30","R83","U83","L12","D49","R71","U7","L72"], ["U62","R66","U55","R34","D71","R55","D58","R83"] ) == (159, 610)
