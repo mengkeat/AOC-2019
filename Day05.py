@@ -5,8 +5,7 @@ def decode(instr):
     opcode = instr % 100
     first = (instr//100) % 10
     second = (instr//1000) % 10
-    third = (instr//10000) % 10
-    return opcode, first==0, second==0, third==0
+    return opcode, first==0, second==0
 
 def Intcode(prog, inp=1, part2 = False):
     s = list(prog)
@@ -14,7 +13,7 @@ def Intcode(prog, inp=1, part2 = False):
     load = lambda v, ispos: s[v] if ispos else v
 
     while s[c] != 99:
-        instr, a, b, dest = decode(s[c])
+        instr, a, b= decode(s[c])
         if instr==1:
             s[s[c+3]] = load(s[c+1], a) + load(s[c+2], b)
             c += 4
