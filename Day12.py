@@ -1,5 +1,6 @@
 import re
-from itertools import permutations, repeat, starmap
+from itertools import *
+from math import gcd
 
 with open("Day12.txt") as infile:
     lines = infile.readlines()
@@ -26,7 +27,24 @@ n_steps = lambda moons, n: list(starmap(step, repeat([moons], n)))[-1]
 energy = lambda moons: sum([ sum(map(abs, m[:3]))*sum(map(abs, m[3:])) for m in moons])
 
 TEST_MOONS = [[-1,0,2,0,0,0], [2,-10,-7,0,0,0], [4,-8,8,0,0,0], [3,5,-1,0,0,0]]
-assert energy(n_steps(TEST_MOONS, 10))==179
+assert energy(n_steps(clone_moons(TEST_MOONS), 10))==179
 print(f"Part 1: {energy(n_steps(clone_moons(moon_dat), 1000))}")
 
+LCM = lambda a,b: a*b//gcd(a,b)
 
+def period(moons):
+    visited = [set(), set(), set()]
+    cycle = [0, 0, 0]
+    update_cycle = lambda c,v,s,it: c if c>0 else (it if s in v else 0)
+
+    for i in count():
+        x, y, z, dx, dy, dz = list(zip(*moons))
+        state = [(x,dx), (y,dy), (z,dz)]
+        cycle = [update_cycle(c, v, s, i) for c, v, s in zip(cycle, visited, state)]
+        for v,s in zip(visited, state):
+            v.add(s)
+        if all(cycle):
+            return LCM(cycle[0], LCM(cycle[1], cycle[2]))
+        step(moons)
+
+print(f"Part 2: {period(clone_moons(moon_dat))}")
