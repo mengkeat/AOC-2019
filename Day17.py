@@ -7,8 +7,8 @@ code = [int(x) for x in open("Day17.txt").readline().strip().split(",")]+[0]*100
 
 SF, SP, EOL = 35, 46, 10
 
-def getmap():
-    prog = Intcode(list(code), [])
+def getmap(code, input=[]):
+    prog = Intcode(code, input)
     m, r, c = defaultdict(int), 0, 0
     NR, NC = 0, 0
     try:
@@ -29,7 +29,7 @@ def alignment(m, nr, nc):
     s =[r*c for r in range(1, nr-1) for c in range(1, nc-1) if is_inter(r,c)]
     return sum(s)
 
-ship_map, NR, NC = getmap()
+ship_map, NR, NC = getmap(list(code))
 
 def draw_map():
     for r in range(NR):
@@ -54,57 +54,47 @@ def trace(pos):
         elif is_SF_rel(*L[Dir]):
             vec = L[Dir]
             Dir = [W, E, N, S][Dir]
-            path += [count, 'L']
+            path += [str(count), 'L']
             count = 0
         elif is_SF_rel(*R[Dir]):
             vec = R[Dir]
             Dir = [E, W, S, N][Dir]
-            path += [count, 'R']
+            path += [str(count), 'R']
             count = 0
         else:
-            path += [count]
+            path += [str(count)]
             return path[1:]
 
 path = trace(start_pos)
 print(f"Full path: {path}")
+
 p2s = lambda p: "".join([str(x) for x in p])
 s2p = lambda s: list(chain(*re.findall('(R|L)(\d+)', s)))
-    
+p2inp  = lambda p: [ord(x) for x in ",".join(p)]+[EOL]
+   
 def extract_path(orig_path, sub_path):
     return set([tuple(s2p(x)) for x in p2s(orig_path).split(p2s(sub_path)) if len(x)])
 
 def decompose_path():
-    possible = []
     for i in range(4, len(path)//2, 2):
         A = path[:i]
         path2 = extract_path(path, A)
-        # for x in path2:
-        #     print(p2s(A), p2s(x))
         cand_B = min(path2, key=lambda x: len(x))
-        # print(f"B: {p2s(cand_B)} {len(cand_B)}")
-        if len(A)>20 or len(cand_B)>20: 
-            continue
         for j in range(2, len(cand_B)+1, 2):
-            path3 = list(set(chain(*map(lambda p: extract_path(p, cand_B[:j]), path2))))
-            # print([p2s(x) for x in path3])
-            if len(path3)!=1:
-                continue
-            B = cand_B[:j]
-            C = path3[0]
-            if len(B)<=20 and len(C)<=20:
-                possible.append((A, B, C))
-    return possible
+            path3 = set(chain(*map(lambda p: extract_path(p, cand_B[:j]), path2)))
+            if len(path3)!=1: continue
+            B, C = cand_B[:j], list(path3)[0]
+            if len(p2s(A))<=20 and len(p2s(B))<=20 and len(p2s(C))<=20:
+                return A, B, C
 
-cand  = decompose_path()
+A, B, C  = decompose_path()
+routine = p2s(path).replace(p2s(A), "A").replace(p2s(B), "B").replace(p2s(C), "C")
 
-# Multiple possible solutions. Use only one of it
-A, B, C = cand[0]
-path_str = p2s(path)
-As, Bs, Cs = p2s(A), p2s(B), p2s(C)
-routine = path_str.replace(As, "A").replace(Bs, "B").replace(Cs, "C")
-print(routine)
-print(A)
-print(B)
-print(C)
-print()
+def dust():
+    input = p2inp(routine)+p2inp(A)+p2inp(B)+p2inp(C)+[N, EOL]
+    c = list(code)
+    c[0] = 2
+    m, nr, nc = getmap(c, input)
+    return m[(nr,0)]
 
+print(f"Part 2: {dust()}")
