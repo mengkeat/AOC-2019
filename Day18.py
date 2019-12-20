@@ -10,43 +10,22 @@ ALL_NODES = KEYS + DOORS + ['@']
 DIR = [-1, 1, -1j, 1j] # N,S,E,W
 
 POS_MAP = dict([(m[r][c] ,r+c*1j) for r in range(NR) for c in range(NC) if m[r][c] in ALL_NODES])
-get_map = lambda p: m[int(p.real)][int(p.imag)]
+map_at = lambda p: m[int(p.real)][int(p.imag)]
 
-@lru_cache(maxsize=None)
-def neighbours(node):
-    visited, s = set([POS_MAP[node]]), [(POS_MAP[node], 0)]
-    neigh = []
+def explore_fill(node):
+    visited, s = set([POS_MAP[node]]), [(POS_MAP[node], 0, ())]
+    connect = {}
     while len(s):
-        p, d = s.pop()
+        p, d, k = s.pop()
         visited.add(p)
+        curr_v = map_at(p)
+        if curr_v in KEYS:
+            connect[curr_v] = (d, k)
         cand = [p+di for di in DIR if (p+di) not in visited]
         for c in cand:
-            if get_map(c)==".":
-                s.append((c, d+1))
-            elif get_map(c) in ALL_NODES:
-                neigh.append((get_map(c), d+1))
-    return dict(neigh)
+            if curr_v != '#':
+                s.append( (c, d+1, k+(curr_v,) if curr_v in DOORS else k) )
+    return connect
+G = dict( [(n, explore_fill(n)) for n in POS_MAP.keys()] )
 
-from math import inf
-shortest = dict( [(n2, dict([(n1, inf) for n1 in POS_MAP.keys()])) for n2 in POS_MAP.keys()] )
-req_keys = dict( [(n2, dict([(n1, set()) for n1 in POS_MAP.keys()])) for n2 in POS_MAP.keys()])
-for k in POS_MAP.keys():
-    shortest[k][k] = 0
-    for n_k in neighbours(k):
-        shortest[k][n_k] = neighbours(k)[n_k]
-        if n_k in DOORS:
-            req_keys[k][n_k].add(n_k.lower())
-        if k in DOORS:
-            req_keys[k][n_k].add(k.lower())
-for k,i,j in product(POS_MAP.keys(), repeat=3):
-    if shortest[i][j] > shortest[i][k]+shortest[k][j]:
-        shortest[i][j] = shortest[i][k]+shortest[k][j]
-        req_keys[i][j] = req_keys[i][j].union(req_keys[i][k])
-        req_keys[i][j] = req_keys[i][j].union(req_keys[k][j])
-
-print(shortest)
-print(req_keys)
-
-def can_access(start, end, keys):
-    keys_required = req_keys[start][end]
-    return all([k in keys_required for k in keys])
+print(G)
