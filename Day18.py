@@ -2,30 +2,58 @@ from functools import *
 from itertools import *
 import heapq
 
-m = [x.strip() for x in open("Day18-test2.txt").readlines()]
+m = [x.strip() for x in open("Day18.txt").readlines()]
 NR, NC = len(m), len(m[0])
-KEYS = [chr(x) for x in range(ord('a'), ord('z'))]
-DOORS = [x.upper() for x in KEYS]
-ALL_NODES = KEYS + DOORS + ['@']
 DIR = [-1, 1, -1j, 1j] # N,S,E,W
 
-POS_MAP = dict([(m[r][c] ,r+c*1j) for r in range(NR) for c in range(NC) if m[r][c] in ALL_NODES])
+get_pos_map = lambda m: dict([(m[r][c] ,r+c*1j) for r in range(NR) for c in range(NC) 
+                if m[r][c].islower() or m[r][c]=='@' or m[r][c] in ('1', '2', '3', '4')])
+
+POS_MAP = get_pos_map(m)
+NKEYS = len([x for x in POS_MAP if x.islower()])
 map_at = lambda p: m[int(p.real)][int(p.imag)]
 
 def explore_fill(node):
-    visited, s = set([POS_MAP[node]]), [(POS_MAP[node], 0, ())]
-    connect = {}
-    while len(s):
-        p, d, k = s.pop()
+    visited, Q = set(), [(POS_MAP[node], 0, set())]
+    connect = dict()
+    while Q:
+        p, d, k = Q.pop(0)
         visited.add(p)
+
         curr_v = map_at(p)
-        if curr_v in KEYS:
-            connect[curr_v] = (d, k)
-        cand = [p+di for di in DIR if (p+di) not in visited]
+        if curr_v.islower():
+            connect[curr_v] = (d, set(k))
+        cand = [p+di for di in DIR if p+di not in visited]
         for c in cand:
-            if curr_v != '#':
-                s.append( (c, d+1, k+(curr_v,) if curr_v in DOORS else k) )
+            if map_at(c) != '#':
+                Q.append( (c, d+1, k|set(map_at(c).lower()) if map_at(c).isupper() else k) )
     return connect
+
 G = dict( [(n, explore_fill(n)) for n in POS_MAP.keys()] )
 
-print(G)
+def shortest(G, start):
+    Q = [(0, (start, frozenset())) ]
+    shortest_dist = {}
+    while Q:
+        dist, (node, curr_keys) = heapq.heappop(Q)
+        if (node, curr_keys) in shortest_dist: 
+            continue
+        shortest_dist[(node, curr_keys)] = dist
+        if len(curr_keys)==NKEYS:
+            return dist
+
+        for i in range(len(node)):
+            for next_node, (d_to_node, req_keys) in G[node[i]].items():
+                if len(req_keys-curr_keys)==0 and next_node not in curr_keys:
+                    new_keys = curr_keys|frozenset(next_node)
+                    new_node = node[:i]+(next_node,)+node[i+1:]
+                    heapq.heappush(Q, (dist+d_to_node, (new_node, new_keys)))
+
+print(f"Part 1: {shortest(G, ('@',))}")
+
+# Ugly but just redefine here
+m = [x.strip() for x in open("Day18-2.txt").readlines()]
+POS_MAP = get_pos_map(m)
+G2 = dict( [(n, explore_fill(n)) for n in POS_MAP.keys()] )
+
+print(f"Part 2: {shortest(G2, ('1', '2', '3', '4'))}")
