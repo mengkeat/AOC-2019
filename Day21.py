@@ -18,6 +18,22 @@ AND D J
 WALK
 """.lstrip()
 
-print(f"Part 1:")
+print("Part 1:")
 output(damage(Code1))
 
+Code2 = """
+NOT A T
+NOT B J
+OR T J
+NOT C T
+OR T J
+AND D J
+NOT E T
+NOT T T 
+OR H T
+AND T J
+RUN
+""".lstrip()
+
+print("\nPart 2:")
+output(damage(Code2))
