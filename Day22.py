@@ -18,27 +18,31 @@ def track_pos(i):
     return i
 print(f"Part 1: {track_pos(2019)}")
 
-N, REPEAT = 119315717514047, 101741582076661
-# def egcd(a, b):
-#     x,y, u,v = 0,1, 1,0
-#     while a != 0:
-#         q,r = b//a,b%a; m,n = x-u*q,y-v*q # use x//y for floor "floor division"
-#         b,a, x,y, u,v = a,r, u,v, m,n
-#     return b, x, y
+N, REP = 119315717514047, 101741582076661
+def egcd(a, b):
+    x,y, u,v = 0,1, 1,0
+    while a != 0:
+        q,r = b//a,b%a; m,n = x-u*q,y-v*q 
+        b,a, x,y, u,v = a,r, u,v, m,n
+    return b, x, y
 
-# def modinv(a, m):
-#     g, x, y = egcd(a, m) 
-#     if g != 1:
-#         return None
-#     else:
-#         return x % m
-# LCM = lambda a,b: a*b//gcd(a,b)
+def modinv(a, m):
+    g, x, y = egcd(a, m) 
+    return (None if g!=1 else x%m)
 
-# print(log(REPEAT))
+# Trace forward first to obtain new sequence p0 + (p1-p0) * x (as all sequences can be)
+# represented as a*x+b 
+# Then mathematically compute the inverse. We know that to map back to factory order,
+# f(a*x+b)=x where f(i) is the inverse transformation to be obtained i.e. f(i) = a_t*i + b_t 
+# when x=0, a_t*b + b_t = 0    ------------- (1)
+# when x=1, a_t*a + a_t*b + b_t = 1 ------------- (2)
+# Take (2)-(1): a_t*a=1 ---> a_t = modinv(a, N)
+# then substitue a_t back to (1) ----> b_t = -a_t*b (congruent mod N)
+# Then apply the polynomial expansion of f^repetitions to obtain final reverse position
+p0, p1 = track_pos(0), track_pos(1)
+a1, b1 = (p1-p0)%N, p0
+a_t = modinv(a1, N) 
+b_t = (-a_t*b1)%N
 
-# a, b, L = 7, 4, 10
-# A = [9,2,5,8,1,4,7,0,3,6]
-# lst = list(range(10))
-# for _ in range(10):
-#     for i in A:
-#     print(lst)
+poly = lambda x: pow(a_t, REP, N)*x + (pow(a_t, REP, N)-1) * modinv(a_t-1, N) * b_t
+print(f"Part 2: {poly(2020)%N}")
