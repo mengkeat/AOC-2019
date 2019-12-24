@@ -41,11 +41,11 @@ is_SF_rel = lambda p, v: ship_map[(p[0]+v[0], p[1]+v[1])] == SF
 
 def trace(pos, vec, dir, count):
     if is_SF_rel(pos, vec):
-        return trace2((pos[0]+vec[0], pos[1]+vec[1]), vec, dir, count+1)
+        return trace((pos[0]+vec[0], pos[1]+vec[1]), vec, dir, count+1)
     elif is_SF_rel(pos, L[dir]):
-        return [str(count), 'L'] + trace2(pos, L[dir], [W,E,N,S][dir], 0)
+        return [str(count), 'L'] + trace(pos, L[dir], [W,E,N,S][dir], 0)
     elif is_SF_rel(pos, R[dir]):
-        return [str(count), 'R'] + trace2(pos, R[dir], [E,W,S,N][dir], 0)
+        return [str(count), 'R'] + trace(pos, R[dir], [E,W,S,N][dir], 0)
     else:
         return [str(count)]
 
