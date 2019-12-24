@@ -17,6 +17,8 @@ def Intcode(prog, input):
             s[index(pc+3, c)] = load(pc+1, a) * load(pc+2, b)
             pc += 4
         elif instr==3:
+            if len(input)==0: 
+                yield "GET"
             s[index(pc+1, a)] = input.pop(0) 
             pc += 2
         elif instr==4:
